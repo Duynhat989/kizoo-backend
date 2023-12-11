@@ -45,6 +45,11 @@ const User = sequelize.define("User", {
     allowNull: false,
     defaultValue: "",
   },
+  access_token: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "",
+  },
   status: {
     type: DataTypes.INTEGER,
     allowNull: false,
