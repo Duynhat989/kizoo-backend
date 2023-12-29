@@ -2,17 +2,18 @@ const db = require("../utils/db");
 const { Sequelize, DataTypes } = require("sequelize");
 var sequelize = db.sequelize;
 //-----------------------------
-const Staff = sequelize.define("Staff", {
+const Img = sequelize.define("Imgs", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  id_store: {
+  id_post: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    defaultValue: null,
+    allowNull: true,
   },
-  id_user: {
+  src: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -22,21 +23,36 @@ const Staff = sequelize.define("Staff", {
     defaultValue: 1,
   },
 });
-async function register(id_store, id_user) {
+async function register(url) {
+  const newStore = await Img.create({
+    src: url,
+});
+return newStore;
   try {
-    const newStore = await Staff.create({
-      id_store: id_store,
-      id_user: id_user,
-    });
-    return newStore;
+    
   } catch (error) {
     return null;
   }
 }
-async function list(id_store) {
+async function update(id,id_post) {
+    try {
+      await Img.update({
+        id_post: id_post, 
+      }, {
+        where: {
+          id: id
+        }
+      });
+      return true
+    } catch (error) {
+      return null;
+    }
+  }
+  
+async function list(id_post) {
   try {
-    const staffs = await Staff.findAll({
-        where: { id_store: id_store},
+    const staffs = await Img.findAll({
+        where: { id_post: id_post},
       });
     return staffs;
   } catch (error) {
@@ -45,5 +61,6 @@ async function list(id_store) {
 }
 module.exports = {
   register,
-  list,
+  update,
+  list
 };

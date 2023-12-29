@@ -1,4 +1,5 @@
 const db = require("../utils/db");
+const { create_new_token } = require("../midleware/manage_token");
 const { DataTypes } = require("sequelize");
 var sequelize = db.sequelize;
 //-----------------------------
@@ -56,9 +57,6 @@ const User = sequelize.define("User", {
     defaultValue: 1,
   },
 });
-(async () => {
-  await sequelize.sync();
-})();
 async function login(username, password) {
   const user = await User.findOne({
     where: { username: username},
@@ -88,6 +86,16 @@ function info_person(id) {
 async function check_contains_email(email) {
   const user = await User.findOne({
     where: { email: email },
+  });
+  if (user) {
+    return user.toJSON();
+  } else {
+    return null;
+  }
+}
+async function check_contains_user(username) {
+  const user = await User.findOne({
+    where: { username: username },
   });
   if (user) {
     return user.toJSON();
@@ -128,12 +136,14 @@ async function get_user_with_id_one(id) {
 function register(fullname, username, email, password, ip_address) {
   return new Promise(async (resolve, reject) => {
     try {
+      var data = username + "tm_-232-8357" + email
       const newUser = await User.create({
         fullname: fullname,
         username: username,
         password: password,
         email: email,
         ip_address: ip_address,
+        access_token: await create_new_token({ data: data }),
       });
       console.log(newUser);
       return resolve(newUser);
@@ -165,5 +175,6 @@ module.exports = {
   info_person,
   get_user_with_email,
   get_user_with_id,
-  get_user_with_id_one
+  get_user_with_id_one,
+  check_contains_user
 };

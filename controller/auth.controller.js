@@ -51,46 +51,62 @@ exports.login = async (req, res) => {
   }
 };
 exports.register = async (req, res) => {
-  const { email, password, username, fullname } = req.body;
-  if (
-    email === undefined ||
-    fullname === undefined ||
-    username === undefined ||
-    password === undefined ||
-    email.length < 5 ||
-    password.length < 5 ||
-    username.length < 5
-  ) {
+  try {
+    const { email, password, username, fullname } = req.body;
+    if (
+      email === undefined ||
+      fullname === undefined ||
+      username === undefined ||
+      password === undefined ||
+      email.length < 5 ||
+      password.length < 5 ||
+      username.length < 5
+    ) {
+      res.send({
+        status: false,
+        user: null,
+        msg: "parameter miss",
+      });
+      return;
+    }
+    if (await contains_mail(email)) {
+      res.send({
+        status: false,
+        user: null,
+        error: "email exits",
+      });
+      return;
+    }
+    if (await contains_user(username)) {
+      res.send({
+        status: false,
+        user: null,
+        error: "user exits",
+      });
+      return;
+    }
+    const hash_password = await encryption(password);
+    var result = await User.register(
+      fullname,
+      username,
+      email,
+      hash_password,
+      fullname
+    );
+    var payload = { user_id: result.id, expired: Date.now() };
+    const auth = await create_new_token(payload);
+    res.send({
+      status: true,
+      auth: auth,
+      payload: payload,
+    });
+  } catch (error) {
     res.send({
       status: false,
       user: null,
-      msg: "parameter miss",
+      error: error,
     });
-    return;
   }
-  if (await contains_mail(email)) {
-    res.send({
-      status: false,
-      user: null,
-      error: "email exits",
-    });
-    return;
-  }
-  const hash_password = await encryption(password);
-  var result = await User.register(
-    fullname,
-    username,
-    email,
-    hash_password,
-    fullname
-  );
-  var payload = { user_id: result.id, expired: Date.now() };
-  const auth = await create_new_token(payload);
-  res.send({
-    status: true,
-    auth: auth,
-    payload: payload,
-  });
 };
 exports.info = async (req, res) => {
   try {
@@ -304,6 +320,13 @@ exports.changepassword_code = async (req, res) => {
 };
 async function contains_mail(email) {
   var result = await User.check_contains_email(email);
+  if (result == null) {
+    return false;
+  }
+  return true;
+}
+async function contains_user(email) {
+  var result = await User.check_contains_user(email);
   if (result == null) {
     return false;
   }
